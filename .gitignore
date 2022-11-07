@@ -2,7 +2,7 @@
 **/*.iml
 **/*.ipr
 **/*.iws
-**/.env
+#**/.env
 build
 .gradle
 
