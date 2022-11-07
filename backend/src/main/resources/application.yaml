@@ -4,14 +4,14 @@ spring:
   r2dbc:
     username: toptweets
     password: pgpassword
-    url: r2dbc:postgresql://postgres:5432/toptweets
+    url: r2dbc:postgresql://sma-postgres:5432/toptweets
     pool.initial-size: 10
     pool.max-size: 50
     pool.max-idle-time: 30m
     pool.validation-query: SELECT 1
   flyway:
     enabled: true
-    url: jdbc:postgresql://postgres:5432/toptweets
+    url: jdbc:postgresql://sma-postgres:5432/toptweets
     user: ${spring.r2dbc.username}
     password: ${spring.r2dbc.password}
     baseline-on-migrate: true
@@ -25,4 +25,4 @@ spring:
 
 tw:
   twApiBaseUrl: https://api.twitter.com/2/tweets/search/stream/rules
-  backendServerUrl: tw-data:1977
+  backendServerUrl: sma-tw-data:1977

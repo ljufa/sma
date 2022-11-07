@@ -7,7 +7,7 @@ database:
   purgeOnBootToken: ${random.uuid}
 
 kafka:
-  bootstrapServers: kafka:9092
+  bootstrapServers: sma-kafka:9092
   maxPollIntervalMs: 5000
   maxPollRecords: 10000
   topicName: tw-stream-v2

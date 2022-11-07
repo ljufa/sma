@@ -4,7 +4,7 @@ import com.sksamuel.hoplite.ConfigLoader
 import com.sksamuel.hoplite.EnvironmentVariablesPropertySource
 import com.sksamuel.hoplite.PropertySource
 
-data class Twitter(val authToken: String, val rules: Map<String, String>)
+data class Twitter(val authToken: String)
 data class Kafka(val bootstrapServers: String, val topicName: String)
 data class Config(val kafka: Kafka, val twitter: Twitter)
 

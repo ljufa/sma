@@ -3,7 +3,7 @@ services:
 
   zookeeper:
     image: bitnami/zookeeper:3.6.2
-    container_name: zookeeper
+    container_name: sma-zookeeper
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
     restart: unless-stopped
@@ -12,13 +12,13 @@ services:
 
   kafka:
     image: bitnami/kafka:2.8.0
-    container_name: kafka
+    container_name: sma-kafka
     environment:
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=sma-zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
       - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://sma-kafka:9092,EXTERNAL://localhost:9093
       - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
     depends_on:
@@ -29,7 +29,7 @@ services:
 
   postgres:
    image: postgres:latest
-   container_name: postgres
+   container_name: sma-postgres
    restart: unless-stopped
    environment:
      - POSTGRES_PASSWORD=pgpassword
@@ -39,8 +39,7 @@ services:
      - sma_pg_data:/var/lib/postgresql/data
 
   tw-stream-collector:
-    image: ljufa/tw-stream-collector:${TAG}
-    container_name: tw-stream-collector
+    image: ljufa/sma/tw-stream-collector:${TAG}
     env_file:
       - .env
     depends_on:
@@ -48,22 +47,21 @@ services:
     restart: unless-stopped
 
   tw-data:
-    image: ljufa/tw-data:${TAG}
-    container_name: tw-data
+    image: ljufa/sma/tw-data:${TAG}
+    container_name: sma-tw-data
     depends_on:
       - kafka
     restart: unless-stopped
 
   backend:
-   image: ljufa/backend:${TAG}
-   container_name: backend
+   image: ljufa/sma/backend:${TAG}
    env_file:
      - .env
    depends_on:
      - postgres
      - tw-data
-   ports:
-     - "8080:8080"
+#   ports:
+#     - "8080:8080"
    restart: unless-stopped
    labels:
      - "traefik.http.routers.backend.rule=Host(`sma.dlj.freemyip.com`) && PathPrefix(`/api`)"
@@ -73,13 +71,11 @@ services:
      - "traefik.http.services.backend.loadbalancer.server.port=8080"
 
   web-ui:
-   image: ljufa/web-ui:${TAG}
-   container_name: web-ui
+   image: ljufa/sma/web-ui:${TAG}
+#   container_name: web-ui
    depends_on:
      - backend
    restart: unless-stopped
-#   ports:
-#     - "80:8000"
    labels:
      - "traefik.enable=true"
      - "traefik.http.routers.web-ui.rule=Host(`sma.dlj.freemyip.com`)"
