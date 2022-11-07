@@ -32,6 +32,7 @@ dependencies {
         }
         exclude("**/application-local.yaml")
         archivesBaseName = "app"
+        archiveVersion = ""
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         from {
             configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }

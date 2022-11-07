@@ -13,6 +13,7 @@ class TwitterRulesService(val twitterApiClient: WebClient) {
 
     var log: Logger = LoggerFactory.getLogger(TwitterRulesService::class.java)
 
+
     suspend fun getExistingRules(): Rules {
         return twitterApiClient.get().awaitExchange { it.awaitBody(Rules::class) }
     }

@@ -8,16 +8,26 @@ use serde::{Deserialize, Serialize};
 // ------ ------
 //     Init
 // ------ ------
+#[cfg(debug_assertions)]
+const API_BASE_URL: &str = "http://localhost:8080/";
+#[cfg(not(debug_assertions))]
+const API_BASE_URL: &str = "/";
+
+const ROW_SIZE: usize = 4;
+const DEFAULT_NUMBER_OF_TWEETS: usize = 16;
+const DEFAULT_DAYS_IN_PAST: usize = 7;
+const PLACE_HOLDER_MIN_HEIGHT: &str = "400px";
 
 fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     orders.perform_cmd(async { Msg::RulesFetched(get_matched_rules().await) });
+    let rule_id = url.path().iter().last().cloned();
     Model {
         menu_visible: false,
         rules: vec![],
-        selected_rule: None,
+        selected_rule_id: rule_id,
         top_tweets: vec![],
-        number_of_tweets: 12,
-        days_in_past: 7,
+        number_of_tweets: DEFAULT_NUMBER_OF_TWEETS,
+        days_in_past: DEFAULT_NUMBER_OF_TWEETS,
     }
 }
 
@@ -25,6 +35,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
 //     Model
 // ------ ------
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]
 struct MatchedRule {
     id: String,
     tag: String,
@@ -32,25 +43,27 @@ struct MatchedRule {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]
 struct TopTweet {
     tweet_id: String,
     number_of_refs: u32,
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all(serialize = "camelCase", deserialize = "snake_case"))]
 struct TopTweetsRequest {
-    days_in_past: u16,
-    limit: u16,
+    days_in_past: usize,
+    limit: usize,
     rule_ids: Vec<String>,
 }
 
 struct Model {
     menu_visible: bool,
     rules: Vec<MatchedRule>,
-    selected_rule: Option<MatchedRule>,
+    selected_rule_id: Option<String>,
     top_tweets: Vec<TopTweet>,
-    number_of_tweets: u16,
-    days_in_past: u16,
+    number_of_tweets: usize,
+    days_in_past: usize,
 }
 
 // ------ ------
@@ -77,14 +90,14 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::RulesFetched(Ok(rules)) => {
             if !rules.is_empty() {
-                let selected_rule = rules[0].clone();
-                let selected_rule2 = rules[0].clone();
                 model.rules = rules;
-                model.selected_rule = Some(selected_rule);
                 let req = TopTweetsRequest {
                     limit: model.number_of_tweets,
                     days_in_past: model.days_in_past,
-                    rule_ids: vec![selected_rule2.id],
+                    rule_ids: model
+                        .selected_rule_id
+                        .as_ref()
+                        .map_or(vec![], |sr| vec![sr.clone()]),
                 };
                 orders.perform_cmd(async { Msg::TopTweetsFetched(get_top_tweets(req).await) });
             }
@@ -92,18 +105,18 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::RulesFetched(Err(err)) => {
             log!("Error fetching rules", err);
         }
-        Msg::TopTweetsFetched(Ok(tweats)) => {
-            model.top_tweets = tweats;
+        Msg::TopTweetsFetched(Ok(tweets)) => {
+            model.top_tweets = tweets;
         }
         Msg::TopTweetsFetched(Err(err)) => {
             log!("Error fetching toptweets", err);
         }
-        Msg::RuleSelected(_) => {}
+        Msg::RuleSelected(sel_rule) => model.selected_rule_id = Some(sel_rule),
     }
 }
 
 async fn get_top_tweets(request: TopTweetsRequest) -> fetch::Result<Vec<TopTweet>> {
-    Request::new("/api/tw/top")
+    Request::new(format!("{}api/tw/top", API_BASE_URL))
         .method(Method::Post)
         .json(&request)?
         .fetch()
@@ -114,7 +127,7 @@ async fn get_top_tweets(request: TopTweetsRequest) -> fetch::Result<Vec<TopTweet
 }
 
 async fn get_matched_rules() -> fetch::Result<Vec<MatchedRule>> {
-    Request::new("/api/tw/matchedrules")
+    Request::new(format!("{}api/tw/matchedrules", API_BASE_URL))
         .method(Method::Get)
         .fetch()
         .await?
@@ -134,7 +147,31 @@ fn view(model: &Model) -> Vec<Node<Msg>> {
 // ----- view_content ------
 
 fn view_content(model: &Model) -> Node<Msg> {
-    div![C!["container"],]
+    div![
+        C!["tile", "is-ancestor", "is-vertical"],
+        model.top_tweets.chunks(ROW_SIZE).map(|row| {
+            div![
+                C!["tile", "is-parent"],
+                row.iter().map(|tw| div![
+                    C!["tile","is-child" "box", "is-loading"],
+                    blockquote![
+                        C!["twitter-tweet"],
+                        div![
+                            style! {
+                                St::MinHeight => PLACE_HOLDER_MIN_HEIGHT
+                            },
+                            progress![C!["progress", "is-small"]],
+                            progress![C!["progress", "is-medium"]],
+                            progress![C!["progress", "is-large"]],
+                        ],
+                        a!(attrs! {
+                            At::Href => format!("https://twitter.com/web/status/{}", tw.tweet_id)
+                        })
+                    ]
+                ])
+            ]
+        })
+    ]
 }
 
 // ----- view_navbar ------
@@ -151,9 +188,9 @@ fn view_navbar(model: &Model) -> Node<Msg> {
             // ------ Logo ------
             a![
                 C!["navbar-item", "has-text-weight-bold", "is-size-3"],
-                "SMA - ONLY FOR DEMO PURPOSE!"
+                "SMA - FOR DEMO PURPOSE ONLY!"
             ],
-            // ------ Hamburger ------1000MyGromova
+            // ------ Hamburger ------
             a![
                 C![
                     "navbar-burger",
@@ -187,18 +224,15 @@ fn view_navbar(model: &Model) -> Node<Msg> {
                     C!["navbar-item"],
                     div![
                         C!["buttons"],
-                        // a![
-                        //     C!["button", "is-primary"],
-                        //     attrs![
-                        //         At::Href => Urls::new(base_url).settings(),
-                        //     ],
-                        //     strong![&user.nickname],
-                        // ],
-                        // a![
-                        //     C!["button", "is-light"],
-                        //     "Log out",
-                        //     ev(Ev::Click, |_| Msg::LogOut),
-                        // ]
+                        model.rules.iter().map(|rule| {
+                            a![
+                                C!["button", IF!(model.selected_rule_id.as_ref().map_or(false, |f| f == &rule.id) => "is-primary")],
+                                attrs![
+                                    At::Href => rule.id,
+                                ],
+                                strong![format!("{} ({})", &rule.tag, rule.number_of_matches)],
+                            ]
+                        })
                     ]
                 ]
             ]

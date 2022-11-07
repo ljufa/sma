@@ -52,7 +52,7 @@ class TwitterDataHandler(
         val requestBuilder = TopTweetsRequest.newBuilder()
         requestBuilder.daysFromNow = apiRequest.daysInPast
         requestBuilder.limit = apiRequest.limit
-        apiRequest.ruleIds?.forEach {
+        apiRequest.ruleIds.forEach {
             requestBuilder.addIncludeRuleIds(it)
         }
         val grpcResponse = topTweetsSub.getTopTweets(requestBuilder.build())
