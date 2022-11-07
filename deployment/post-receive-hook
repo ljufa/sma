@@ -11,7 +11,7 @@ do
         echo "Ref $ref received. Deploying ${BRANCH} branch to production..."
         git --work-tree=$TARGET --git-dir=$GIT_DIR checkout -f
         cd $TARGET/deployment
-        make redeploy_local
+        make build_jar build_ui redeploy_local
     else
         echo "Ref $ref received. Doing nothing: only the ${BRANCH} branch may be deployed on this server."
     fi
