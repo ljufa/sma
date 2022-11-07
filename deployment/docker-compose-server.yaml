@@ -41,7 +41,7 @@ services:
   tw-stream-collector:
     image: ljufa/sma/tw-stream-collector:${TAG}
     env_file:
-      - .env
+      - /home/admin/sma_secrets
     depends_on:
       - kafka
     restart: unless-stopped
@@ -56,7 +56,7 @@ services:
   backend:
    image: ljufa/sma/backend:${TAG}
    env_file:
-     - .env
+     - /home/admin/sma_secrets
    depends_on:
      - postgres
      - tw-data
@@ -72,7 +72,6 @@ services:
 
   web-ui:
    image: ljufa/sma/web-ui:${TAG}
-#   container_name: web-ui
    depends_on:
      - backend
    restart: unless-stopped
