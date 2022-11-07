@@ -1,0 +1,8 @@
+kafka:
+  bootstrapServers: kafka:9092
+  topicName: tw-stream-v2
+twitter:
+  rules:
+    berlin: berlin has:media
+    paris: paris has:media
+    belgrade: belgrade has:media

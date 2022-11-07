@@ -1,0 +1,6 @@
+rootProject.name = 'sma'
+
+include 'backend'
+include 'tw-data'
+include 'tw-stream-collector'
+include 'ui-old'

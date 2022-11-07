@@ -1,0 +1,247 @@
+[
+  {
+    "data": {
+      "author_id": "1",
+      "created_at": "2021-09-15T20:43:48.000Z",
+      "entities": {
+        "annotations": [
+          {
+            "start": 30,
+            "end": 34,
+            "probability": 0.9892,
+            "type": "Place",
+            "normalized_text": "Paris"
+          }
+        ],
+        "mentions": [
+          {
+            "start": 3,
+            "end": 13,
+            "username": "Havenlust",
+            "id": "426723697"
+          }
+        ],
+        "urls": [
+          {
+            "start": 39,
+            "end": 62,
+            "url": "https://t.co/htHDGlZUKu",
+            "expanded_url": "https://twitter.com/Havenlust/status/1438118799392354304/photo/1",
+            "display_url": "pic.twitter.com/htHDGlZUKu"
+          }
+        ]
+      },
+      "id": "1",
+      "lang": "en",
+      "public_metrics": {
+        "retweet_count": 389,
+        "reply_count": 0,
+        "like_count": 0,
+        "quote_count": 0
+      },
+      "text": "Text 1"
+    },
+    "matching_rules": [
+      {
+        "id": 1,
+        "tag": "paris"
+      }
+    ]
+  },
+  {
+    "data": {
+      "author_id": "2",
+      "created_at": "2021-09-15T20:43:48.000Z",
+      "entities": {
+        "annotations": [
+          {
+            "start": 19,
+            "end": 23,
+            "probability": 0.8482,
+            "type": "Place",
+            "normalized_text": "Paris"
+          }
+        ],
+        "mentions": [
+          {
+            "start": 3,
+            "end": 17,
+            "username": "GoldenSoul144",
+            "id": "1129626480718372864"
+          }
+        ],
+        "urls": [
+          {
+            "start": 43,
+            "end": 66,
+            "url": "https://t.co/4IP554fe7d",
+            "expanded_url": "https://twitter.com/DSTNRoyce/status/1347034486903513088/video/1",
+            "display_url": "pic.twitter.com/4IP554fe7d"
+          }
+        ]
+      },
+      "id": "2",
+      "lang": "en",
+      "possibly_sensitive": false,
+      "public_metrics": {
+        "retweet_count": 2,
+        "reply_count": 0,
+        "like_count": 0,
+        "quote_count": 0
+      },
+      "referenced_tweets": [
+        {
+          "type": "retweeted",
+          "id": "1"
+        }
+      ],
+      "text": "Text 2"
+    },
+    "matching_rules": [
+      {
+        "id": 1,
+        "tag": "paris"
+      }
+    ]
+  },
+  {
+    "data": {
+      "author_id": "3",
+      "created_at": "2021-09-15T20:43:52.000Z",
+      "entities": {
+        "mentions": [
+          {
+            "start": 3,
+            "end": 12,
+            "username": "dela3aaa",
+            "id": "1431650578246025221"
+          }
+        ],
+        "urls": [
+          {
+            "start": 111,
+            "end": 134,
+            "url": "https://t.co/G2az9tIOQR",
+            "expanded_url": "https://twitter.com/dela3aaa/status/1438101574681874435/video/1",
+            "display_url": "pic.twitter.com/G2az9tIOQR"
+          }
+        ]
+      },
+      "id": "3",
+      "lang": "fr",
+      "possibly_sensitive": false,
+      "public_metrics": {
+        "retweet_count": 57,
+        "reply_count": 0,
+        "like_count": 0,
+        "quote_count": 0
+      },
+      "referenced_tweets": [
+        {
+          "type": "retweeted",
+          "id": "1"
+        }
+      ],
+      "text": "Text 3"
+    },
+    "matching_rules": [
+      {
+        "id": 1,
+        "tag": "paris"
+      }
+    ]
+  },
+  {
+    "data": {
+      "author_id": "725812412797046784",
+      "created_at": "2021-09-15T20:43:55.000Z",
+      "entities": {
+        "mentions": [
+          {
+            "start": 3,
+            "end": 13,
+            "username": "tmbIrpics",
+            "id": "2982938111"
+          }
+        ],
+        "urls": [
+          {
+            "start": 45,
+            "end": 68,
+            "url": "https://t.co/1EKFfFQSNI",
+            "expanded_url": "https://twitter.com/tmbIrpics/status/1438207096332460038/photo/1",
+            "display_url": "pic.twitter.com/1EKFfFQSNI"
+          },
+          {
+            "start": 45,
+            "end": 68,
+            "url": "https://t.co/1EKFfFQSNI",
+            "expanded_url": "https://twitter.com/tmbIrpics/status/1438207096332460038/photo/1",
+            "display_url": "pic.twitter.com/1EKFfFQSNI"
+          }
+        ]
+      },
+      "id": "4",
+      "lang": "fr",
+      "possibly_sensitive": false,
+      "public_metrics": {
+        "retweet_count": 489,
+        "reply_count": 0,
+        "like_count": 0,
+        "quote_count": 0
+      },
+      "text": "Text 4"
+    },
+    "matching_rules": [
+      {
+        "id": 1,
+        "tag": "paris"
+      }
+    ]
+  },
+  {
+    "data": {
+      "author_id": "1344247589093453824",
+      "created_at": "2021-09-15T20:43:55.000Z",
+      "entities": {
+        "hashtags": [
+          {
+            "start": 46,
+            "end": 53,
+            "tag": "BRUPSG"
+          },
+          {
+            "start": 54,
+            "end": 64,
+            "tag": "BRUGESPSG"
+          }
+        ],
+        "urls": [
+          {
+            "start": 65,
+            "end": 88,
+            "url": "https://t.co/pKbME2Y9ZQ",
+            "expanded_url": "https://twitter.com/adam_gdn/status/1438242198013816836/photo/1",
+            "display_url": "pic.twitter.com/pKbME2Y9ZQ"
+          }
+        ]
+      },
+      "id": "5",
+      "lang": "fr",
+      "possibly_sensitive": true,
+      "public_metrics": {
+        "retweet_count": 0,
+        "reply_count": 0,
+        "like_count": 0,
+        "quote_count": 0
+      },
+      "text": "Text 5"
+    },
+    "matching_rules": [
+      {
+        "id": 1,
+        "tag": "paris"
+      }
+    ]
+  }
+]

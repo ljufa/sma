@@ -1,0 +1,29 @@
+spring:
+  profiles:
+   active: "local"
+  webflux:
+    base-path: /sma-control
+  r2dbc:
+    username: toptweets
+    password: pgpassword
+    url: r2dbc:postgresql://postgres:5432/toptweets
+    pool.initial-size: 10
+    pool.max-size: 50
+    pool.max-idle-time: 30m
+    pool.validation-query: SELECT 1
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://postgres:5432/toptweets
+    user: ${spring.r2dbc.username}
+    password: ${spring.r2dbc.password}
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-jecc6018.us.auth0.com/
+
+tw:
+  twApiBaseUrl: https://api.twitter.com/2/tweets/search/stream/rules

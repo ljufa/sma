@@ -1,0 +1,3 @@
+grpcServer:
+  url: sma-tw-data:1977
+  isSsl: false

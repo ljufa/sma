@@ -1,0 +1,15 @@
+server:
+  port: 1977
+  isSsl: false
+
+database:
+  rootDirPath: /data
+  purgeOnBootToken: ${random.uuid}
+
+kafka:
+  bootstrapServers: kafka:9092
+  maxPollIntervalMs: 5000
+  maxPollRecords: 10000
+  topicName: tw-stream-v2
+  groupId: prod-group
+  minBatchPersisSize: 10

@@ -1,0 +1,25 @@
+[package]
+version = "0.1.0"
+name = "web_ui"
+authors = ["Dragan Ljubojevic"]
+license = "MIT"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+seed = "0.9.2"
+chrono = "0.4.15"
+ulid = "1.0.0"
+serde = "1.0.115"
+wasm-bindgen-futures = "0.4.17"
+serde-wasm-bindgen = "0.4.5"
+
+[profile.release]
+lto = true
+opt-level = 'z'
+codegen-units = 1
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ['-Os']

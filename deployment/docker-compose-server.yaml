@@ -1,0 +1,120 @@
+version: "3"
+services:
+
+  zookeeper:
+    image: bitnami/zookeeper:3.6.2
+    container_name: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    restart: unless-stopped
+    volumes:
+      - zk_data:/bitnami/zookeeper
+
+  kafka:
+    image: bitnami/kafka:2.8.0
+    container_name: kafka
+    ports:
+      - '9093:9093'
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:9093
+      - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+    depends_on:
+      - zookeeper
+    restart: unless-stopped
+    volumes:
+      - kafka_data:/bitnami/kafka
+
+  # postgres:
+    # image: postgres:latest
+    # container_name: postgres
+    # restart: unless-stopped
+    # environment:
+      # - POSTGRES_PASSWORD=pgpassword
+      # - POSTGRES_USER=toptweets
+      # - PGDATA=/var/lib/postgresql/data/pgdata
+    # volumes:
+      # - sma_pg_data:/var/lib/postgresql/data
+# #    ports:
+# #      - '5432:5432'
+
+  sma-tw-stream-collector:
+    image: ljufa/sma-tw-stream-collector:${TAG}
+    container_name: sma-tw-stream-collector
+    env_file:
+      - .env
+    depends_on:
+      - kafka
+    restart: unless-stopped
+
+  sma-tw-data:
+    image: ljufa/sma-tw-data:${TAG}
+    container_name: sma-tw-data
+#    ports:
+#      - '1977:1977'
+    depends_on:
+      - kafka
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sma-tw-data.rule=Host(`sma.data.dlj.freemyip.com`)"
+      - "traefik.http.routers.sma-tw-data.entrypoints=websecure"
+      - "traefik.http.routers.sma-tw-data.tls.certresolver=mydnschallenge"
+      - "traefik.http.services.sma-tw-data.loadbalancer.server.port=1977"
+      - "traefik.http.services.sma-tw-data.loadbalancer.server.scheme=h2c"
+
+  sma-ui-old:
+    image: ljufa/sma-ui-old:${TAG}
+    container_name: sma-ui-old
+    depends_on:
+      - sma-tw-data
+    restart: unless-stopped
+    labels:
+      - "traefik.http.routers.sma-ui-old.rule=Host(`sma.ui-old.dlj.freemyip.com`)"
+      - "traefik.enable=true"
+      - "traefik.http.routers.sma-ui-old.entrypoints=websecure"
+      - "traefik.http.routers.sma-ui-old.tls.certresolver=mydnschallenge"
+      - "traefik.http.services.sma-ui-old.loadbalancer.server.port=8080"
+
+  # sma-control:
+    # image: ljufa/sma-control:${TAG}
+    # container_name: sma-control
+    # depends_on:
+      # - postgres
+    # #    ports:
+    # #    - '8080:8080'
+    # restart: unless-stopped
+    # labels:
+      # - "traefik.http.routers.sma-control.rule=Host(`sma.control.dlj.freemyip.com`)"
+      # - "traefik.enable=true"
+      # - "traefik.http.routers.sma-control.entrypoints=websecure"
+      # - "traefik.http.routers.sma-control.tls.certresolver=mydnschallenge"
+      # - "traefik.http.services.sma-control.loadbalancer.server.port=8080"
+
+  # sma-web-ui:
+    # image: ljufa/sma-web-ui:${TAG}
+    # container_name: sma-web-ui
+    # restart: unless-stopped
+    # labels:
+      # - "traefik.enable=true"
+      # - "traefik.http.routers.sma-web-ui.rule=Host(`sma.ui.dlj.freemyip.com`)"
+      # - "traefik.http.routers.sma-web-ui.entrypoints=websecure"
+      # - "traefik.http.routers.sma-web-ui.tls.certresolver=mydnschallenge"
+      # - "traefik.http.services.sma-web-ui.loadbalancer.server.port=80"
+
+volumes:
+  kafka_data:
+    driver: local
+  zk_data:
+    driver: local
+  sma_pg_data:
+    driver: local
+
+networks:
+  default:
+    external:
+      name: proxy

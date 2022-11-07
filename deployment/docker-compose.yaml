@@ -1,0 +1,51 @@
+version: "3"
+services:
+
+  zookeeper:
+    image: bitnami/zookeeper:3.6.2
+    container_name: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    restart: unless-stopped
+    volumes:
+      - zk_data:/bitnami/zookeeper
+
+  kafka:
+    image: bitnami/kafka:2.8.0
+    container_name: kafka
+    ports:
+      - '9093:9093'
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:9093
+      - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+    depends_on:
+      - zookeeper
+    restart: unless-stopped
+    volumes:
+      - kafka_data:/bitnami/kafka
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=pgpassword
+      - POSTGRES_USER=toptweets
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - sma_pg_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+volumes:
+  kafka_data:
+    driver: local
+  zk_data:
+    driver: local
+  sma_pg_data:
+    driver: local

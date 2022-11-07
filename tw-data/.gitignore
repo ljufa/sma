@@ -1,0 +1,9 @@
+build
+.gradle
+.idea
+.gradletasknamecache
+/src/test/resources/data/*
+/data/*
+out
+**/*.mdb
+**/application-local.yaml
