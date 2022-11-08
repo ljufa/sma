@@ -52,6 +52,7 @@ class TwitterDataHandler(
         val requestBuilder = TopTweetsRequest.newBuilder()
         requestBuilder.daysFromNow = apiRequest.daysInPast
         requestBuilder.limit = apiRequest.limit
+        requestBuilder.excludePossiblySensitive = true
         apiRequest.ruleIds.forEach {
             requestBuilder.addIncludeRuleIds(it)
         }
