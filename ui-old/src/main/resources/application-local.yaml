@@ -1,3 +1,0 @@
-grpcServer:
-  url: sma.data.dlj.freemyip.com
-  isSsl: true
