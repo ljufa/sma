@@ -109,19 +109,31 @@ message TweetRecord {
   repeated UserMentionVO userMentions = 10;
   repeated UrlVO urls = 11;
   string possiblySensitive = 12;
+  PublicMetricsVO publicMetrics = 13;
 }
+
+message PublicMetricsVO {
+  uint64 retweetCount = 1;
+  uint64 likeCount = 2;
+  uint64 replyCount = 3;
+  uint64 quoteCount = 4;
+}
+
 message MatchedRuleVO {
   string id = 1;
   string tag = 2;
 }
+
 message HashtagVO {
   string id = 1;
   string tag = 2;
 }
+
 message UserMentionVO {
   string id = 1;
   string username = 2;
 }
+
 message UrlVO {
   string id = 1;
   string url = 2;
@@ -129,6 +141,7 @@ message UrlVO {
   string displayUrl = 4;
   string expandedUrl = 5;
 }
+
 message TweetReferenceVO {
   string id = 1;
   string refId = 2;

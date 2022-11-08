@@ -12,6 +12,7 @@ object DataSource {
     private var dbPurged = false
     private val env = prepareDbEnv()
     val reactions: Dbi<ByteBuffer> = env.openDbi("reactions", DbiFlags.MDB_CREATE)
+    val publicMetricsIndex: Dbi<ByteBuffer> = env.openDbi("publicMetrics", DbiFlags.MDB_CREATE)
     val dateIndex: Dbi<ByteBuffer> = env.openDbi("dateIndex", DbiFlags.MDB_CREATE)
     val possiblySensitiveIndex: Dbi<ByteBuffer> = env.openDbi("possiblySensitiveIndex", DbiFlags.MDB_CREATE)
     val langIndex: Dbi<ByteBuffer> = env.openDbi("twidLangIndex", DbiFlags.MDB_CREATE, DbiFlags.MDB_DUPSORT)
@@ -19,10 +20,6 @@ object DataSource {
     val hashTags: Dbi<ByteBuffer> = env.openDbi("hashTags", DbiFlags.MDB_CREATE, DbiFlags.MDB_DUPSORT)
     val userMentions: Dbi<ByteBuffer> = env.openDbi("userMentions", DbiFlags.MDB_CREATE, DbiFlags.MDB_DUPSORT)
     val urls: Dbi<ByteBuffer> = env.openDbi("refUrls", DbiFlags.MDB_CREATE, DbiFlags.MDB_DUPSORT)
-
-    fun getEnv(): Env<ByteBuffer> {
-        return env
-    }
 
     fun readTxn(): Txn<ByteBuffer> {
         return env.txnRead()
@@ -45,15 +42,15 @@ object DataSource {
                     deleteExistingData(config.database.purgeOnBootToken)
             }
             val path = File(config.database.rootDirPath)
-            if(!path.exists()){
+            if (!path.exists()) {
                 path.createNewFile()
             }
             val env: Env<ByteBuffer> =
                 Env.create()
                     // LMDB also needs to know how large our DB might be. Over-estimating is OK.
-                    .setMapSize(1048576000)
+                    .setMapSize(5048576000)
                     // LMDB also needs to know how many DBs (Dbi) we want to store in this Env.
-                    .setMaxDbs(10)
+                    .setMaxDbs(15)
                     .open(path, EnvFlags.MDB_NOLOCK, EnvFlags.MDB_NOSYNC)
             return env
         } catch (ex: Exception) {

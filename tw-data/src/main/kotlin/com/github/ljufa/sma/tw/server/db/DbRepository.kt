@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.streams.toList
 import kotlin.system.measureTimeMillis
 
 
@@ -33,6 +32,7 @@ object DbRepository {
                         persistHashTags(tweetRecord, txnWrite)
                         persistUserMentions(tweetRecord, txnWrite)
                         persistUrls(tweetRecord, txnWrite)
+                        persistPublicMetrics(tweetRecord, txnWrite)
                     }
                 }.onFailure {
                     log.error("Error", it)
@@ -43,7 +43,6 @@ object DbRepository {
     }
 
     fun getTopTweets(request: TopTweetsRequest): TopTweetsResponse {
-        log.debug("Requested ${request.excludePossiblySensitive}")
         val time = getRelativeDate(request.daysFromNow)
         val builder = TopTweetsResponse.newBuilder()
         kotlin.runCatching {
@@ -73,7 +72,6 @@ object DbRepository {
         }.onFailure { log.error("err", it) }
         return builder.build()
     }
-
 
 
     fun findAllMatchedRules(): MatchedRules {
@@ -153,11 +151,16 @@ object DbRepository {
         return builder.build()
     }
 
-
     private fun persistUrls(tweetRecord: TweetRecord, txnWrite: Txn<ByteBuffer>) {
         tweetRecord.urlsList?.forEach { url ->
             DataSource.urls.put(txnWrite, tweetRecord.tweetId.bb(), url.url.bb())
         }
+    }
+
+    private fun persistPublicMetrics(tweetRecord: TweetRecord, txnWrite: Txn<ByteBuffer>) {
+        val totalCount =
+            tweetRecord.publicMetrics.retweetCount + tweetRecord.publicMetrics.likeCount + tweetRecord.publicMetrics.quoteCount + tweetRecord.publicMetrics.replyCount
+        DataSource.publicMetricsIndex.put(txnWrite, tweetRecord.tweetId.bb(), totalCount.bb())
     }
 
     private fun persistUserMentions(tweetRecord: TweetRecord, txnWrite: Txn<ByteBuffer>) {
@@ -191,13 +194,13 @@ object DbRepository {
             formatter.parse(createdAt).toInstant().toEpochMilli().bb()
         )
     }
+
     private fun persistPossiblySensitive(tweetId: String, possiblySensitive: String, txnWrite: Txn<ByteBuffer>) {
         DataSource.possiblySensitiveIndex.put(
             txnWrite,
             tweetId.bb(),
             possiblySensitive.bb()
         )
-
     }
 
     private fun persistReactions(
@@ -236,7 +239,7 @@ object DbRepository {
     }
 
     private fun matchRule(twId: ByteBuffer, rule: ProtocolStringList?, txn: Txn<ByteBuffer>): Boolean {
-        if (rule == null || rule.isEmpty()) {
+        if (rule.isNullOrEmpty()) {
             return true
         }
         val get = DataSource.matchedRulesIndex.get(txn, twId)
@@ -245,14 +248,18 @@ object DbRepository {
     }
 
     private fun matchLanguage(tweetId: ByteBuffer, lang: ProtocolStringList?, txn: Txn<ByteBuffer>): Boolean {
-        if (lang == null || lang.isEmpty())
+        if (lang.isNullOrEmpty())
             return true
         val get = DataSource.langIndex.get(txn, tweetId)
         return get != null && lang.contains(get.str())
     }
 
-    private fun excludePossiblySensitive(tweetId: ByteBuffer, possiblySensitiveOnly: Boolean, txn: Txn<ByteBuffer>): Boolean {
-        if(!possiblySensitiveOnly){
+    private fun excludePossiblySensitive(
+        tweetId: ByteBuffer,
+        possiblySensitiveOnly: Boolean,
+        txn: Txn<ByteBuffer>
+    ): Boolean {
+        if (!possiblySensitiveOnly) {
             return true
         }
         val get = DataSource.possiblySensitiveIndex.get(txn, tweetId)

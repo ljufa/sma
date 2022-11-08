@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="SmaControlApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
-    <option name="ACTIVE_PROFILES" />
+    <option name="ACTIVE_PROFILES" value="local" />
     <module name="sma.backend.main" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.github.ljufa.sma.backend.SmaControlApplication" />
     <extension name="coverage">

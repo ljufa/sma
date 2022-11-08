@@ -153,17 +153,20 @@ fn view_content(model: &Model) -> Node<Msg> {
             div![
                 C!["tile", "is-parent"],
                 row.iter().map(|tw| div![
-                    C!["tile","is-child" "box", "is-loading"],
+                    C!["tile","is-child" "box"],
                     blockquote![
                         C!["twitter-tweet"],
-                        div![
-                            style! {
-                                St::MinHeight => PLACE_HOLDER_MIN_HEIGHT
-                            },
-                            progress![C!["progress", "is-small"]],
-                            progress![C!["progress", "is-medium"]],
-                            progress![C!["progress", "is-large"]],
-                        ],
+                        raw!(
+                            r#"
+                        <div class="card">
+                            <div class="card-image">
+                                <div class="load-wraper">
+                                    <div class="activity"></div>
+                                </div>
+                            </div>
+                        </div>"#
+                        ),
+                        // a!( format!("https://twitter.com/web/status/{}", tw.tweet_id))
                         a!(attrs! {
                             At::Href => format!("https://twitter.com/web/status/{}", tw.tweet_id)
                         })

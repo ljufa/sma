@@ -15,7 +15,6 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.*
 import java.util.stream.Stream
-import kotlin.streams.toList
 
 val jsonConf: Configuration = Configuration.defaultConfiguration()
     .addOptions(Option.SUPPRESS_EXCEPTIONS)
@@ -38,6 +37,7 @@ fun jsonToGrpcObject(consumerRecord: ConsumerRecord<String, String>): TweetRecor
         .setLang(context.read("$.data.lang"))
         .setText(context.read("$.data.text"))
 
+
     val possiblySensitive: Boolean? = context.read("$.data.possibly_sensitive")
     if (possiblySensitive != null) {
         builder.possiblySensitive = possiblySensitive.toString()
@@ -45,6 +45,17 @@ fun jsonToGrpcObject(consumerRecord: ConsumerRecord<String, String>): TweetRecor
         builder.possiblySensitive = "unknown"
     }
 
+    val publicMetrics: Map<String, Long>? = context.read("$.data.public_metrics")
+    val publicMetricsBuilder = PublicMetricsVO.newBuilder()
+    publicMetrics?.map {
+        when (it.key) {
+            "like_count" -> publicMetricsBuilder.likeCount = it.value
+            "reply_count" -> publicMetricsBuilder.replyCount = it.value
+            "quote_count" -> publicMetricsBuilder.quoteCount = it.value
+            "retweet_count" -> publicMetricsBuilder.quoteCount = it.value
+        }
+    }
+    builder.setPublicMetrics(publicMetricsBuilder)
     val refTws: List<Map<String, String>>? = context.read("$.data.referenced_tweets")
     refTws?.forEach { ref ->
         builder.addRef(
