@@ -1,7 +1,3 @@
-#![allow(clippy::wildcard_imports)]
-// @TODO: Remove.
-#![allow(dead_code, unused_variables)]
-
 use seed::{prelude::*, *};
 use serde::{Deserialize, Serialize};
 
@@ -14,9 +10,8 @@ const API_BASE_URL: &str = "http://localhost:8080/";
 const API_BASE_URL: &str = "/";
 
 const ROW_SIZE: usize = 4;
-const DEFAULT_NUMBER_OF_TWEETS: usize = 16;
+const DEFAULT_NUMBER_OF_TWEETS: usize = 12;
 const DEFAULT_DAYS_IN_PAST: usize = 7;
-const PLACE_HOLDER_MIN_HEIGHT: &str = "400px";
 
 fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     orders.perform_cmd(async { Msg::RulesFetched(get_matched_rules().await) });
@@ -27,7 +22,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
         selected_rule_id: rule_id,
         top_tweets: vec![],
         number_of_tweets: DEFAULT_NUMBER_OF_TWEETS,
-        days_in_past: DEFAULT_NUMBER_OF_TWEETS,
+        days_in_past: DEFAULT_DAYS_IN_PAST,
     }
 }
 
