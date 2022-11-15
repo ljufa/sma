@@ -9,8 +9,8 @@ const API_BASE_URL: &str = "http://localhost:8080/";
 #[cfg(not(debug_assertions))]
 const API_BASE_URL: &str = "/";
 
-const ROW_SIZE: usize = 4;
-const DEFAULT_NUMBER_OF_TWEETS: usize = 12;
+const ROW_SIZE: usize = 3;
+const DEFAULT_NUMBER_OF_TWEETS: usize = 9;
 const DEFAULT_DAYS_IN_PAST: usize = 7;
 
 fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {

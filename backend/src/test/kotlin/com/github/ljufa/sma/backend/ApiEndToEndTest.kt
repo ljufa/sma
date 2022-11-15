@@ -106,7 +106,7 @@ class ApiEndToEndTest(
         client.mutateWith(csrf())
             .post()
             .uri("/api/tw/top")
-            .bodyValue(TopTweetsApiRequest(daysInPast = 4, limit = 13))
+            .bodyValue(TopTweetsApiRequest(daysInPast = 4, limit = 13, ruleIds = emptyList()))
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isOk
