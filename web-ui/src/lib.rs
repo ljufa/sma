@@ -102,6 +102,9 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         }
         Msg::TopTweetsFetched(Ok(tweets)) => {
             model.top_tweets = tweets;
+            orders.after_next_render(|_|{
+                twReload();
+            });
         }
         Msg::TopTweetsFetched(Err(err)) => {
             log!("Error fetching toptweets", err);
@@ -245,4 +248,8 @@ fn view_navbar(model: &Model) -> Node<Msg> {
 #[wasm_bindgen(start)]
 pub fn start() {
     App::start("app", init, update, view);
+}
+#[wasm_bindgen]
+extern "C" {
+    pub fn twReload();
 }
