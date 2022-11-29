@@ -1,7 +1,7 @@
 DEFAULT_TAG ?= latest
 
 build_jar:
-	cd .. && ./gradlew build -x test
+	cd .. && ./gradlew build
 
 build_ui:
 	cd ../web-ui/ && cargo make build_release

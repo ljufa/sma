@@ -1,7 +1,7 @@
 package com.github.ljufa.sma.tw.server.db
 
 import com.github.ljufa.sma.tw.server.*
-import com.github.ljufa.sma.tw.server.grpc.*
+import com.github.ljufa.sma.tw.server.api.*
 import com.google.protobuf.ProtocolStringList
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.lmdbjava.Txn
@@ -13,15 +13,17 @@ import java.util.*
 import kotlin.system.measureTimeMillis
 
 
-object DbRepository {
+class DbRepository(private val dataSource: DataSource) {
 
     private val log: Logger = LoggerFactory.getLogger(DbRepository::class.java)
     private val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
 
     fun persistBatch(consumerRecords: ConsumerRecords<String, String>) {
-        DataSource.writeTxn().use { txnWrite ->
+        if (consumerRecords.isEmpty)
+            return
+        dataSource.writeTxn().let { txnWrite ->
             consumerRecords.forEach {
-                kotlin.runCatching {
+                runCatching {
                     val tweetRecord = jsonToGrpcObject(it)
                     if (tweetRecord != null) {
                         persistReactions(tweetRecord, txnWrite)
@@ -45,13 +47,12 @@ object DbRepository {
     fun getTopTweets(request: TopTweetsRequest): TopTweetsResponse {
         val time = getRelativeDate(request.daysFromNow)
         val builder = TopTweetsResponse.newBuilder()
-        kotlin.runCatching {
+        runCatching {
             measureTimeMillis {
                 val pq = PriorityQueue<TweetStatComparable>(request.limit)
-                DataSource.readTxn().use { txn ->
-                    DataSource.reactions.iterate(txn).stream()
+                dataSource.readTxn().let { txn ->
+                    dataSource.reactions.iterate(txn).stream()
                         .filter { matchDate(it.key(), time, txn) }
-                        .filter { matchLanguage(it.key(), request.includeLanguagesList, txn) }
                         .filter { matchRule(it.key(), request.includeRuleIdsList, txn) }
                         .filter { excludePossiblySensitive(it.key(), request.excludePossiblySensitive, txn) }
                         .forEach { reaction ->
@@ -76,10 +77,10 @@ object DbRepository {
 
     fun findAllMatchedRules(): MatchedRules {
         val builder = MatchedRules.newBuilder()
-        kotlin.runCatching {
+        runCatching {
             measureTimeMillis {
-                DataSource.readTxn().use { txn ->
-                    DataSource.matchedRulesIndex.iterate(txn)
+                dataSource.readTxn().let { txn ->
+                    dataSource.matchedRulesIndex.iterate(txn)
                         .stream()
                         .map { it.`val`().str() }
                         .toList()
@@ -97,98 +98,45 @@ object DbRepository {
         return builder.build()
     }
 
-    fun findAllLanguages(): Languages {
-        val builder = Languages.newBuilder()
-        kotlin.runCatching {
-            measureTimeMillis {
-                DataSource.readTxn().use { txn ->
-                    DataSource.langIndex.iterate(txn)
-                        .stream()
-                        .map { it.`val`().str() }
-                        .toList()
-                        .groupingBy { it }
-                        .eachCount()
-                        .forEach {
-                            builder.addLanguage(
-                                Language.newBuilder().setId(it.key).setLabel(it.key).setNumberOfMatches(it.value)
-                            )
-                        }
-                }
-            }.also { log.debug("language fetch finished in {}ms", it) }
-        }.onFailure { log.error("error", it) }
-        return builder.build()
-    }
-
-    fun findAllHashTags(): HashTags {
-        val builder = HashTags.newBuilder()
-        kotlin.runCatching {
-            measureTimeMillis {
-                DataSource.readTxn().use { txn ->
-                    DataSource.hashTags.iterate(txn)
-                        .stream()
-                        .map { it.`val`().str() }
-                        .toList()
-                        .groupingBy { it }
-                        .eachCount()
-                        .filter { it.value > 20 }
-                        .forEach {
-                            builder.addHashtag(
-                                HashTag.newBuilder().setTag(it.key).setNumberOfMatches(it.value)
-                            )
-                        }
-                }
-            }.also { log.debug("hashtags fetch finished in {}ms", it) }
-        }.onFailure { log.error("error", it) }
-        return builder.build()
-    }
-
-    fun findAllUserMentions(): UserMentions {
-        val builder = UserMentions.newBuilder()
-        kotlin.runCatching {
-            measureTimeMillis {
-            }.also { log.debug("Usermentions fetch finished in {}ms", it) }
-        }.onFailure { log.error("error", it) }
-        return builder.build()
-    }
 
     private fun persistUrls(tweetRecord: TweetRecord, txnWrite: Txn<ByteBuffer>) {
         tweetRecord.urlsList?.forEach { url ->
-            DataSource.urls.put(txnWrite, tweetRecord.tweetId.bb(), url.url.bb())
+            dataSource.urls.put(txnWrite, tweetRecord.tweetId.bb(), url.url.bb())
         }
     }
 
     private fun persistPublicMetrics(tweetRecord: TweetRecord, txnWrite: Txn<ByteBuffer>) {
         val totalCount =
             tweetRecord.publicMetrics.retweetCount + tweetRecord.publicMetrics.likeCount + tweetRecord.publicMetrics.quoteCount + tweetRecord.publicMetrics.replyCount
-        DataSource.publicMetricsIndex.put(txnWrite, tweetRecord.tweetId.bb(), totalCount.bb())
+        dataSource.publicMetricsIndex.put(txnWrite, tweetRecord.tweetId.bb(), totalCount.bb())
     }
 
     private fun persistUserMentions(tweetRecord: TweetRecord, txnWrite: Txn<ByteBuffer>) {
         tweetRecord.userMentionsList?.forEach { um ->
-            DataSource.userMentions.put(txnWrite, tweetRecord.tweetId.bb(), um.username.bb())
+            dataSource.userMentions.put(txnWrite, tweetRecord.tweetId.bb(), um.username.bb())
         }
     }
 
     private fun persistHashTags(tweetRecord: TweetRecord, txnWrite: Txn<ByteBuffer>) {
         tweetRecord.hashtagsList?.forEach { ht ->
-            DataSource.hashTags.put(txnWrite, tweetRecord.tweetId.bb(), ht.tag.bb())
+            dataSource.hashTags.put(txnWrite, tweetRecord.tweetId.bb(), ht.tag.bb())
         }
     }
 
     private fun persistLangIndex(twId: String, lang: String, txnWrite: Txn<ByteBuffer>) {
-        DataSource.langIndex.put(txnWrite, twId.bb(), lang.bb())
+        dataSource.langIndex.put(txnWrite, twId.bb(), lang.bb())
     }
 
 
     private fun persistMatchedRuleIndex(twId: String, tweetRecord: TweetRecord, txnWrite: Txn<ByteBuffer>) {
         tweetRecord.matchedRuleList?.forEach { mr ->
-            DataSource.matchedRulesIndex.put(txnWrite, twId.bb(), mr.id.bb())
+            dataSource.matchedRulesIndex.put(txnWrite, twId.bb(), mr.id.bb())
         }
     }
 
 
     private fun persistDateIndex(twId: String, createdAt: String, txnWrite: Txn<ByteBuffer>) {
-        DataSource.dateIndex.put(
+        dataSource.dateIndex.put(
             txnWrite,
             twId.bb(),
             formatter.parse(createdAt).toInstant().toEpochMilli().bb()
@@ -196,7 +144,7 @@ object DbRepository {
     }
 
     private fun persistPossiblySensitive(tweetId: String, possiblySensitive: String, txnWrite: Txn<ByteBuffer>) {
-        DataSource.possiblySensitiveIndex.put(
+        dataSource.possiblySensitiveIndex.put(
             txnWrite,
             tweetId.bb(),
             possiblySensitive.bb()
@@ -211,18 +159,18 @@ object DbRepository {
         tweetRecord.refList?.forEach {
             val exists = incrementReactionIfExists(it, txnWrite)
             if (!exists) {
-                DataSource.reactions.put(txnWrite, it.refId.bb(), 1L.bb())
+                dataSource.reactions.put(txnWrite, it.refId.bb(), 1L.bb())
             }
         }
-        DataSource.reactions.put(txnWrite, tweetId.bb(), 0L.bb())
+        dataSource.reactions.put(txnWrite, tweetId.bb(), 0L.bb())
     }
 
     private fun incrementReactionIfExists(it: TweetReferenceVO, txn: Txn<ByteBuffer>): Boolean {
         val twId = it.refId.bb()
-        val referencedExisting = DataSource.reactions.get(txn, twId)
+        val referencedExisting = dataSource.reactions.get(txn, twId)
         if (referencedExisting != null) {
             val cnt = referencedExisting.long + 1
-            DataSource.reactions.put(txn, twId, cnt.bb())
+            dataSource.reactions.put(txn, twId, cnt.bb())
             return true
         } else {
             return false
@@ -234,7 +182,7 @@ object DbRepository {
         if (afterTime == null) {
             return true
         }
-        val get = DataSource.dateIndex.get(txn, twId)
+        val get = dataSource.dateIndex.get(txn, twId)
         return get != null && get.long >= afterTime
     }
 
@@ -242,17 +190,11 @@ object DbRepository {
         if (rule.isNullOrEmpty()) {
             return true
         }
-        val get = DataSource.matchedRulesIndex.get(txn, twId)
+        val get = dataSource.matchedRulesIndex.get(txn, twId)
         return get != null && rule.contains(get.str())
 
     }
 
-    private fun matchLanguage(tweetId: ByteBuffer, lang: ProtocolStringList?, txn: Txn<ByteBuffer>): Boolean {
-        if (lang.isNullOrEmpty())
-            return true
-        val get = DataSource.langIndex.get(txn, tweetId)
-        return get != null && lang.contains(get.str())
-    }
 
     private fun excludePossiblySensitive(
         tweetId: ByteBuffer,
@@ -262,7 +204,7 @@ object DbRepository {
         if (!possiblySensitiveOnly) {
             return true
         }
-        val get = DataSource.possiblySensitiveIndex.get(txn, tweetId)
+        val get = dataSource.possiblySensitiveIndex.get(txn, tweetId)
         val str = get.str()
         return str == "false"
     }

@@ -26,3 +26,4 @@ spring:
 tw:
   twApiBaseUrl: https://api.twitter.com/2/tweets/search/stream/rules
   backendServerUrl: sma-tw-data:1977
+  authToken: tbd

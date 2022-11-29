@@ -4,6 +4,7 @@
     <module name="sma.tw-data.main" />
     <shortenClasspath name="NONE" />
     <option name="VM_PARAMETERS" value="--add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tw-data" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

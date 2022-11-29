@@ -1,6 +1,6 @@
 package com.github.ljufa.sma.tw.server
 
-import com.github.ljufa.sma.tw.server.grpc.*
+import com.github.ljufa.sma.tw.server.db.*
 import com.jayway.jsonpath.Configuration
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.Option
@@ -16,7 +16,7 @@ import java.time.ZoneOffset
 import java.util.*
 import java.util.stream.Stream
 
-val jsonConf: Configuration = Configuration.defaultConfiguration()
+private val jsonConf: Configuration = Configuration.defaultConfiguration()
     .addOptions(Option.SUPPRESS_EXCEPTIONS)
 
 fun getRelativeDate(daysFromNow: Int): Long {
@@ -112,14 +112,8 @@ fun ByteBuffer.str(): String =
 fun CursorIterable<ByteBuffer>.stream(): Stream<CursorIterable.KeyVal<ByteBuffer>> =
     com.google.common.collect.Streams.stream(this)
 
-fun KafkaConsumer<String, String>.getCurrentLag(): Long {
-    val endOffset = this.endOffsets(this.assignment()).values.sum()
-    val committed = this.committed(this.assignment())
-    val committedOffset = if (committed.isEmpty()) 0 else committed.values.filterNotNull().sumOf { it.offset() }
-    return endOffset - committedOffset
-}
 
-fun createKafkaConsumer(): KafkaConsumer<String, String> {
+fun createKafkaConsumer(config: Config): KafkaConsumer<String, String> {
     val props = Properties()
     props[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = config.kafka.bootstrapServers
     props[ConsumerConfig.GROUP_ID_CONFIG] = config.kafka.groupId
@@ -131,5 +125,7 @@ fun createKafkaConsumer(): KafkaConsumer<String, String> {
     props[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = config.kafka.maxPollRecords
     props[ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG] = config.kafka.maxPollIntervalMs
     props[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
-    return KafkaConsumer(props)
+    val kafkaConsumer = KafkaConsumer<String, String>(props)
+    kafkaConsumer.subscribe(mutableListOf(config.kafka.topicName))
+    return kafkaConsumer
 }

@@ -9,13 +9,15 @@ import org.springframework.web.reactive.function.client.awaitExchange
 
 
 @Component
-class TwitterRulesService(val twitterApiClient: WebClient) {
+class TwitterRulesService(val twitterApiClient: WebClient, private var existingRules: Rules? = null) {
 
     var log: Logger = LoggerFactory.getLogger(TwitterRulesService::class.java)
 
-
     suspend fun getExistingRules(): Rules {
-        return twitterApiClient.get().awaitExchange { it.awaitBody(Rules::class) }
+        if (existingRules == null) {
+            existingRules = twitterApiClient.get().awaitExchange { response -> response.awaitBody(Rules::class) }
+        }
+        return existingRules!!
     }
 
 }

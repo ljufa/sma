@@ -1,7 +1,6 @@
 package com.github.ljufa.sma.backend.ext
 
-import com.github.ljufa.sma.tw.server.grpc.TopTweetsGrpcKt
-import com.github.ljufa.sma.tw.server.grpc.TwitterApiGrpcKt
+import com.github.ljufa.sma.tw.server.api.TopTweetsGrpcKt
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.Dispatchers
@@ -36,16 +35,7 @@ class TwitterConfig {
     }
 
     @Bean
-    fun twDataApiStub(config: TwProperties): TwitterApiGrpcKt.TwitterApiCoroutineStub {
-        val channel: ManagedChannel = ManagedChannelBuilder.forTarget(config.backendServerUrl)
-            .usePlaintext()
-            .executor(Dispatchers.Default.asExecutor())
-            .build()
-        return TwitterApiGrpcKt.TwitterApiCoroutineStub(channel)
-    }
-
-    @Bean
-    fun getWebClient(twProperties: TwProperties): WebClient {
+    fun getTwitterWebClient(twProperties: TwProperties): WebClient {
         return WebClient.builder()
             .baseUrl(twProperties.twApiBaseUrl)
             .defaultHeaders {
@@ -55,9 +45,5 @@ class TwitterConfig {
             .build()
     }
 
-    @Bean
-    fun globalRules(twitterRulesService: TwitterRulesService): Rules {
-        return runBlocking { twitterRulesService.getExistingRules() }
-    }
 }
 

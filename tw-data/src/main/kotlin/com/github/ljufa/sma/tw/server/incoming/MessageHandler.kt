@@ -1,7 +1,6 @@
-package com.github.ljufa.sma.tw.server.db
+package com.github.ljufa.sma.tw.server.incoming
 
-import com.github.ljufa.sma.tw.server.config
-import com.github.ljufa.sma.tw.server.getCurrentLag
+import com.github.ljufa.sma.tw.server.Config
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.slf4j.Logger
@@ -11,44 +10,42 @@ import kotlin.system.measureTimeMillis
 
 
 class MessageHandler(val consumer: KafkaConsumer<String, String>) {
-    init {
-        consumer.subscribe(mutableListOf(config.kafka.topicName))
-    }
-
     val log: Logger = LoggerFactory.getLogger(MessageHandler::class.java)
-
     private var listening = true
+    private var running = true
 
     fun listenBatches(
         consumeMessages: (ConsumerRecords<String, String>) -> Unit
     ) {
         while (listening) {
-            val lag = consumer.getCurrentLag()
-            if (lag < config.kafka.minBatchPersisSize) {
-                log.debug("Lag: $lag < ${config.kafka.minBatchPersisSize} going to sleep")
-                Thread.sleep(5000)
+            val consumerRecords = consumer.poll(Duration.ofMillis(2000))
+            if (consumerRecords.isEmpty) {
                 continue
             }
-            val consumerRecords = consumer.poll(Duration.ofMillis(3000))
-            kotlin.runCatching {
+            runCatching {
                 measureTimeMillis {
                     consumeMessages(consumerRecords)
                     consumer.commitSync()
-                }.also { log.info("Batch processing finished in {}ms", it) }
+                }.also { log.info("Batch size ${consumerRecords.count()} finished processing in {}ms", it) }
             }.onFailure { log.error("Error in processing message batch", it) }
         }
-
+        consumer.unsubscribe()
+        running = false
     }
 
     fun seekOffsetToBeginning() {
         consumer.poll(Duration.ofSeconds(10))
-        consumer.assignment().forEach {
-            consumer.seek(it, 0).also { log.info("setting offset on topic-partition $it to 0") }
+        consumer.assignment().forEach { topicPartition ->
+            consumer.seek(topicPartition, 0).also { log.info("setting offset on topic-partition $it to 0") }
         }
     }
 
     fun stop() {
         listening = false
-        consumer.unsubscribe()
+        var waitCounter = 0
+        while (running && waitCounter++ < 10) {
+            log.info("Waiting for consumer thread to finish...")
+            Thread.sleep(300)
+        }
     }
 }

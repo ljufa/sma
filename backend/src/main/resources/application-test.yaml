@@ -1,0 +1,5 @@
+tw:
+  authToken: mocked
+spring:
+  flyway:
+    enabled: false

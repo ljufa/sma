@@ -10,7 +10,6 @@ data class Kafka(
     val topicName: String,
     val maxPollRecords: Int,
     val maxPollIntervalMs: Int,
-    val minBatchPersisSize: Int
 )
 
 data class Database(
@@ -21,9 +20,9 @@ data class Database(
 data class Server(val port: Int, val isSsl: Boolean)
 data class Config(val database: Database, val server: Server, val kafka: Kafka)
 
-
-val config = ConfigLoader.Builder()
+fun createConfig() = ConfigLoader.Builder()
     .addPropertySource(EnvironmentVariablesPropertySource(useUnderscoresAsSeparator = true, allowUppercaseNames = true))
+    .addSource(PropertySource.resource("/application-test.yaml", optional = true))
     .addSource(PropertySource.resource("/application-local.yaml", optional = true))
     .addSource(PropertySource.resource("/application.yaml"))
     .build()

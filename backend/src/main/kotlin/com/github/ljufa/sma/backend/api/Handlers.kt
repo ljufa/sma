@@ -3,9 +3,9 @@ package com.github.ljufa.sma.backend.api
 import com.github.ljufa.sma.backend.db.AccountRepository
 import com.github.ljufa.sma.backend.db.User
 import com.github.ljufa.sma.backend.db.UserRepository
-import com.github.ljufa.sma.tw.server.grpc.TopTweetsGrpcKt
-import com.github.ljufa.sma.tw.server.grpc.TopTweetsRequest
-import com.github.ljufa.sma.tw.server.grpc.TwitterApiGrpcKt
+import com.github.ljufa.sma.backend.ext.TwitterRulesService
+import com.github.ljufa.sma.tw.server.api.TopTweetsGrpcKt
+import com.github.ljufa.sma.tw.server.api.TopTweetsRequest
 import com.google.protobuf.Empty
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEmpty
@@ -17,8 +17,7 @@ import org.springframework.web.reactive.function.server.*
 class AccountHandler(
     private val accountRepository: AccountRepository,
     private val userRepository: UserRepository,
-
-    ) {
+) {
     suspend fun getUserAccount(request: ServerRequest): ServerResponse {
         val principal = request.awaitPrincipal() ?: return ServerResponse.status(403).buildAndAwait()
         val authId = principal.name
@@ -32,15 +31,15 @@ class AccountHandler(
 @Component
 class TwitterDataHandler(
     val topTweetsSub: TopTweetsGrpcKt.TopTweetsCoroutineStub,
-    val twitterDataStub: TwitterApiGrpcKt.TwitterApiCoroutineStub,
-    val globalRules: com.github.ljufa.sma.backend.ext.Rules
+    val twitterRulesService: TwitterRulesService
 ) {
     suspend fun getMatchedRules(request: ServerRequest): ServerResponse {
-        val matchedRules = twitterDataStub.getMatchedRules(Empty.getDefaultInstance())
+        val matchedRules = topTweetsSub.getMatchedRules(Empty.getDefaultInstance())
+        val allRules = twitterRulesService.getExistingRules().data
         val apiRules = matchedRules.ruleList.map {
             MatchedRule(
                 it.id,
-                globalRules.data.find { gr -> gr.id == it.id }!!.tag,
+                allRules.find { gr -> gr.id == it.id }!!.tag,
                 it.numberOfMatches
             )
         }

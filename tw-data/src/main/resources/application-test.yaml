@@ -1,10 +1,4 @@
-kafka:
-  bootstrapServers: localhost:9093
-  groupId: test-group
-
 database:
   rootDirPath: src/test/resources/data
+  # this will ensure that test db is re-created every time
   purgeOnBootToken: ${random.uuid}
-
-server:
-  port: ${random.int(2000,5000)}

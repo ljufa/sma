@@ -1,0 +1,42 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+
+package com.github.ljufa.sma.tw.server.api;
+
+option java_multiple_files = true;
+
+service TopTweets {
+  rpc GetTopTweets (TopTweetsRequest) returns (TopTweetsResponse);
+  rpc GetMatchedRules (google.protobuf.Empty) returns (MatchedRules);
+}
+
+message ByRuleRequest{
+  uint32 daysFromNow = 1;
+  string ruleId = 2;
+}
+
+message MatchedRules {
+  repeated Rule rule = 1;
+}
+
+message Rule {
+  string id = 1;
+  string tag = 2;
+  uint32 numberOfMatches = 3;
+}
+
+message TopTweetsRequest {
+  repeated string includeRuleIds = 1;
+  uint32 daysFromNow = 2;
+  uint32 limit = 3;
+  bool excludePossiblySensitive = 4;
+}
+
+message TopTweetsResponse {
+  repeated TweetStat stats = 1;
+}
+
+message TweetStat {
+  string tweetId = 1;
+  uint64 numberOfRefs = 2;
+}

@@ -1,13 +1,15 @@
 package com.github.ljufa.sma.tw.server.db
 
-import com.github.ljufa.sma.tw.server.config
+
+import com.github.ljufa.sma.tw.server.Config
 import org.lmdbjava.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.ByteBuffer
 
-object DataSource {
+class DataSource(val config: Config) {
+
     val log: Logger = LoggerFactory.getLogger(DataSource::class.java)
     private var dbPurged = false
     private val env = prepareDbEnv()
@@ -35,28 +37,21 @@ object DataSource {
 
 
     private fun prepareDbEnv(): Env<ByteBuffer> {
-        try {
-            File(config.database.rootDirPath).mkdir()
-            if (config.database.purgeOnBootToken != null) {
-                dbPurged =
-                    deleteExistingData(config.database.purgeOnBootToken)
-            }
-            val path = File(config.database.rootDirPath)
-            if (!path.exists()) {
-                path.createNewFile()
-            }
-            val env: Env<ByteBuffer> =
-                Env.create()
-                    // LMDB also needs to know how large our DB might be. Over-estimating is OK.
-                    .setMapSize(5048576000)
-                    // LMDB also needs to know how many DBs (Dbi) we want to store in this Env.
-                    .setMaxDbs(15)
-                    .open(path, EnvFlags.MDB_NOLOCK, EnvFlags.MDB_NOSYNC)
-            return env
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            throw ex
+        File(config.database.rootDirPath).mkdir()
+        if (config.database.purgeOnBootToken != null) {
+            dbPurged =
+                deleteExistingData(config.database.purgeOnBootToken)
         }
+        val path = File(config.database.rootDirPath)
+        if (!path.exists()) {
+            path.createNewFile()
+        }
+        return Env.create()
+            // LMDB also needs to know how large our DB might be. Over-estimating is OK.
+            .setMapSize(5048576000)
+            // LMDB also needs to know how many DBs (Dbi) we want to store in this Env.
+            .setMaxDbs(15)
+            .open(path, EnvFlags.MDB_NOLOCK, EnvFlags.MDB_NOSYNC)
     }
 
     private fun deleteExistingData(purgeDbToken: String): Boolean {
