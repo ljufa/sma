@@ -37,6 +37,7 @@ fun main() {
     addShutdownHook {
         log.info("*** shutting down gRPC server since JVM is shutting down")
         grpcServer.shutdown()
+        grpcServer.awaitTermination()
         log.info("*** server shut down")
     }
 

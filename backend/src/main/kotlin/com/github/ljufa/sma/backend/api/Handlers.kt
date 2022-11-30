@@ -7,6 +7,7 @@ import com.github.ljufa.sma.backend.ext.TwitterRulesService
 import com.github.ljufa.sma.tw.server.api.TopTweetsGrpcKt
 import com.github.ljufa.sma.tw.server.api.TopTweetsRequest
 import com.google.protobuf.Empty
+import io.grpc.Metadata
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEmpty
 import org.springframework.stereotype.Component
@@ -34,16 +35,22 @@ class TwitterDataHandler(
     val twitterRulesService: TwitterRulesService
 ) {
     suspend fun getMatchedRules(request: ServerRequest): ServerResponse {
-        val matchedRules = topTweetsSub.getMatchedRules(Empty.getDefaultInstance())
-        val allRules = twitterRulesService.getExistingRules().data
-        val apiRules = matchedRules.ruleList.map {
-            MatchedRule(
-                it.id,
-                allRules.find { gr -> gr.id == it.id }!!.tag,
-                it.numberOfMatches
-            )
+        val result = kotlin.runCatching {
+            val matchedRules = topTweetsSub.getMatchedRules(request = Empty.getDefaultInstance(), headers = Metadata())
+            val allRules = twitterRulesService.getExistingRules().data
+            val apiRules = matchedRules.ruleList.map {
+                MatchedRule(
+                    it.id,
+                    allRules.find { gr -> gr.id == it.id }!!.tag,
+                    it.numberOfMatches
+                )
+            }
+            ServerResponse.ok().bodyValueAndAwait(apiRules)
         }
-        return ServerResponse.ok().bodyValueAndAwait(apiRules)
+        .onFailure {
+            ServerResponse.status(500).buildAndAwait()
+        }
+        return result.getOrThrow()
     }
 
     suspend fun getTopTweets(request: ServerRequest): ServerResponse {
