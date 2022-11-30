@@ -11,6 +11,7 @@ class TopTweetsService(private val dbRepository: DbRepository) : TopTweetsGrpcKt
     override suspend fun getTopTweets(request: TopTweetsRequest): TopTweetsResponse {
         return dbRepository.getTopTweets(request)
     }
+
     override suspend fun getMatchedRules(request: Empty): MatchedRules {
         return dbRepository.findAllMatchedRules()
     }

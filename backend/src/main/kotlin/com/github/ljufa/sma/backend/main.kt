@@ -11,6 +11,6 @@ import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 class SmaControlApplication
 
 fun main(args: Array<String>) {
-	runApplication<SmaControlApplication>(*args)
+    runApplication<SmaControlApplication>(*args)
 }
 

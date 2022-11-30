@@ -1,6 +1,5 @@
 package com.github.ljufa.sma.tw.server.incoming
 
-import com.github.ljufa.sma.tw.server.Config
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.slf4j.Logger

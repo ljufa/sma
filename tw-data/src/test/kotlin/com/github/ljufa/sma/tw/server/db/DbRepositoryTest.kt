@@ -4,7 +4,7 @@ import com.github.ljufa.sma.tw.server.api.TopTweetsRequest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class DbRepositoryTest: DbSetupTest() {
+class DbRepositoryTest : DbSetupTest() {
 
     @Test
     fun test_findAllMatchedRules() {

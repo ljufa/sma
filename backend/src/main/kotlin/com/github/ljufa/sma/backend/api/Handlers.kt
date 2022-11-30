@@ -47,9 +47,9 @@ class TwitterDataHandler(
             }
             ServerResponse.ok().bodyValueAndAwait(apiRules)
         }
-        .onFailure {
-            ServerResponse.status(500).buildAndAwait()
-        }
+            .onFailure {
+                ServerResponse.status(500).buildAndAwait()
+            }
         return result.getOrThrow()
     }
 
